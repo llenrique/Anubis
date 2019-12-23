@@ -43,7 +43,7 @@ defmodule Anubis.Pet do
 
   # Converts a string to Date
   @spec _cast_obtained_date(map) :: map
-  defp _cast_obtained_date(%{obtained_date: _obtained_date} = params) do
+  defp _cast_obtained_date(%{obtained_date: obtained_date} = params) when is_binary (obtained_date) do
     Map.update!(params, :obtained_date, &Date.from_iso8601!(&1))
   end
 
@@ -115,6 +115,7 @@ defmodule Anubis.Pet do
     |> Map.replace!(:death_date, death_date)
     |> Map.replace!(:alive_status, :death)
     |> Map.replace!(:age_time_in_months, age_time_in_months)
+
 
   end
 
