@@ -65,6 +65,10 @@ defmodule Anubis.Pet do
   end
 
   # Calculates age_status using race_size
+  #   The :adult age is different for 
+  #   large and giant races from small
+  #   and medium
+  #   
   @spec _calculate_age_status(map) :: map
   defp _calculate_age_status(%{adoption_age: :adult} = pet) do
     Map.put(pet, :age_status, :adult)
