@@ -4,13 +4,13 @@ defmodule Anubis.PetTest do
   alias Anubis.Pet, as: Pet
 
   @basic_pet %{
-    name: "Tony",
+    name: "Dick",
     adoption_age: :puppy,
-    adoption_date: "2019-07-16",
-    birth_date: "2019-06-16",
+    adoption_date: "2005-08-24",
+    birth_date: "2005-08-15",
     pet_type: :canine,
     race_size: :small,
-    race: "Chihuahua",
+    race: "French Mini",
     gender: :male,
     adoption_type: :given
   }

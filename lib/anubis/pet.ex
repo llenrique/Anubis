@@ -21,13 +21,18 @@ defmodule Anubis.Pet do
             birth_date: nil,
             age_time: nil,
             adoption_type: "", # :of_street, :given, :bought, :born
-            age_status: [:puppy, :adult], # if actually is a :puppy or adult
-            adoption_age: [:puppy, :adult],
-            race_size: [:small, :medium, :large, :giant], # :small, :medium, :large, :giant
+            age_status: nil, # if actually is a :puppy or adult
+            adoption_age: nil,
+            adoption_status: false,
+            race_size: nil, # :small, :medium, :large, :giant
             gender: nil,
             alive_status: :alive,
             death_date: nil,
             vaccine_table: %{}
+
+
+  @adult_for_big_dogs 104
+  @adult_for_small_dogs 78
             
 
   @doc """
@@ -55,10 +60,10 @@ defmodule Anubis.Pet do
     |> _cast_date_fields()
   end
 
-  # Case when obtained_date is actually a Date type
+  # Case when date fields are actually a Date type
   defp _cast_date_fields(pet), do: pet
 
-  # Calculates the age_in_weeks sice adoption_date when adoption_age is :puppy
+  # Calculates the age_in_weeks sice birth_date when adoption_age is :puppy
   @spec _calculate_age_weeks_for_pet(map) :: map
   defp _calculate_age_weeks_for_pet(%{adoption_age: :puppy} = pet) do
     Timex.diff(Date.utc_today(), pet.birth_date, :weeks)
@@ -66,8 +71,8 @@ defmodule Anubis.Pet do
 
   # Calculates age_status using race_size
   #   The :adult age is different for 
-  #   large and giant races from small
-  #   and medium
+  #   large and giant (104 weeks) races from small
+  #   and medium (78 weeks)
   #   
   @spec _calculate_age_status(map) :: map
   defp _calculate_age_status(%{adoption_age: :adult} = pet) do
@@ -81,7 +86,7 @@ defmodule Anubis.Pet do
     } = pet) when race_size == :small or race_size == :medium do
 
     case _calculate_age_weeks_for_pet(pet) do
-      weeks when weeks >= 18 -> Map.put(pet, :age_status, :adult)
+      weeks when weeks >= @adult_for_small_dogs -> Map.put(pet, :age_status, :adult)
       _ -> Map.put(pet, :age_status, :puppy)
     end
   end
@@ -93,7 +98,7 @@ defmodule Anubis.Pet do
     } = pet) when race_size == :large or race_size == :giant do
 
     case _calculate_age_weeks_for_pet(pet) do
-      weeks when weeks >= 104 -> Map.put(pet, :age_status, :adult)
+      weeks when weeks >= @adult_for_big_dogs -> Map.put(pet, :age_status, :adult)
       _ -> Map.put(pet, :age_status, :puppy)
     end
   end
@@ -118,6 +123,35 @@ defmodule Anubis.Pet do
     |> Map.put(:age_time, age_time)
     |> Map.replace!(:alive_status, :death)
 
+  end
+
+  @doc """
+  If a person wants to give in adoption a pet, this function will update
+  the adoption status
+  """
+  @spec update_adoption_status_for_pet(Pet, atom) :: Pet
+  def update_adoption_status_for_pet(
+    %{
+      adoption_age: :puppy
+    } = pet, 
+    adoption_status) do
+    
+    with {:ok, _} <- _check_for_set_in_adoption_availability(pet) do
+      Map.replace!(pet, :adoption_status, adoption_status)
+    else
+      {:error, reason} ->
+        IO.inspect(reason, label: "Error")
+        pet
+    end
+  end
+
+  defp _check_for_set_in_adoption_availability(pet) do
+    case _calculate_age_weeks_for_pet(pet) do
+      weeks when weeks > 12 -> 
+        {:ok, "This pet can be put in adoption"}
+      _ -> 
+        {:error, "Puppies can be put in adoption 12 weeks afer born"}
+    end
   end
 
 end
