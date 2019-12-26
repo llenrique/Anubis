@@ -14,15 +14,16 @@ defmodule Anubis.Pet do
   """
   alias __MODULE__
 
-  defstruct name: "", 
-            race: "", # :pit_bull, :persian, :russian, etc
-            pet_type: "", # :canine, :feline, :rodent
-            obtained_date: "", 
-            adoption_type: "", # :of_street, :given, :bought
+  defstruct name: nil, 
+            race: nil, # :pit_bull, :persian, :russian, etc
+            pet_type: nil, # :canine, :feline, :rodent
+            adoption_date: nil,
+            birth_date: nil,
+            age_time: nil,
+            adoption_type: "", # :of_street, :given, :bought, :born
             age_status: [:puppy, :adult], # if actually is a :puppy or adult
             adoption_age: [:puppy, :adult],
-            age_time_in_months: nil, # number of mmonths
-            size: [:small, :medium, :large, :giant], # :small, :medium, :large, :giant
+            race_size: [:small, :medium, :large, :giant], # :small, :medium, :large, :giant
             gender: nil,
             alive_status: :alive,
             death_date: nil,
@@ -33,73 +34,70 @@ defmodule Anubis.Pet do
   Creates a pet
   """
   @spec create_pet(map) :: Pet
-  def create_pet(params) do
-    params
-    |> _cast_obtained_date()
-    |> _calculate_age_time()
+  def create_pet(pet) do
+    pet
+    |> _cast_date_fields()
     |> _calculate_age_status()
     |> _cast_params_to_struct()
   end
 
   # Converts a string to Date
-  @spec _cast_obtained_date(map) :: map
-  defp _cast_obtained_date(%{obtained_date: obtained_date} = params) when is_binary (obtained_date) do
-    Map.update!(params, :obtained_date, &Date.from_iso8601!(&1))
+  @spec _cast_date_fields(map) :: map
+  defp _cast_date_fields(%{adoption_date: adoption_date} = pet) when is_binary (adoption_date) do
+    pet
+    |> Map.update!(:adoption_date, &Date.from_iso8601!(&1))
+    |> _cast_date_fields()
+  end
+
+  defp _cast_date_fields(%{birth_date: birth_date} = pet) when is_binary (birth_date) do
+    pet
+    |> Map.update!(:birth_date, &Date.from_iso8601!(&1))
+    |> _cast_date_fields()
   end
 
   # Case when obtained_date is actually a Date type
-  defp _cast_obtained_date(params), do: params
+  defp _cast_date_fields(pet), do: pet
 
-  # Calculates the age_time sice adoption_date when adoption_age is :puppy
-  @spec _calculate_age_time(map) :: map
-  defp _calculate_age_time(%{adoption_age: :puppy} = params) do
-    age_time = Timex.diff(Date.utc_today(), params.obtained_date, :months)
-
-    Map.put(params, :age_time_in_months, age_time)
+  # Calculates the age_in_weeks sice adoption_date when adoption_age is :puppy
+  @spec _calculate_age_weeks_for_pet(map) :: map
+  defp _calculate_age_weeks_for_pet(%{adoption_age: :puppy} = pet) do
+    Timex.diff(Date.utc_today(), pet.birth_date, :weeks)
   end
 
-  # Calculates the age_time since adoption_date when adoption_age is :adult
-  @spec _calculate_age_time(map) :: map
-  defp _calculate_age_time(%{adoption_age: :adult} = params) do
-    Map.put(params, :age_time_in_months, "Must be calculated for a vet")
-  end
-
-  # Calculates age_status using the age_time, and size
+  # Calculates age_status using race_size
   @spec _calculate_age_status(map) :: map
-  defp _calculate_age_status(%{adoption_age: :adult} = params) do
-    Map.put(params, :age_status, :adult)
+  defp _calculate_age_status(%{adoption_age: :adult} = pet) do
+    Map.put(pet, :age_status, :adult)
   end
 
   defp _calculate_age_status(
     %{
-      adoption_age: :puppy,
-      size: size
-    } = params) when size == :large or size == :giant do
-    age_status = if params.age_time_in_months < 24 do
-      :puppy
-    else
-      :adult
+      adoption_age: :puppy, 
+      race_size: race_size,
+    } = pet) when race_size == :small or race_size == :medium do
+
+    case _calculate_age_weeks_for_pet(pet) do
+      weeks when weeks >= 18 -> Map.put(pet, :age_status, :adult)
+      _ -> Map.put(pet, :age_status, :puppy)
     end
-    Map.put(params, :age_status, age_status)
   end
 
   defp _calculate_age_status(
     %{
-      adoption_age: :puppy,
-      size: size
-    } = params) when size == :small or size == :medium do
-    age_status = if params.age_time_in_months < 18 do
-      :puppy
-    else
-      :adult
+      adoption_age: :puppy, 
+      race_size: race_size,
+    } = pet) when race_size == :large or race_size == :giant do
+
+    case _calculate_age_weeks_for_pet(pet) do
+      weeks when weeks >= 104 -> Map.put(pet, :age_status, :adult)
+      _ -> Map.put(pet, :age_status, :puppy)
     end
-    Map.put(params, :age_status, age_status)
   end
 
   # Builds a struct when the given params
   @spec _cast_params_to_struct(map) :: Pet
-  defp _cast_params_to_struct(params) do
-    struct(__MODULE__, Map.to_list(params))
+  defp _cast_params_to_struct(pet) do
+    struct(__MODULE__, Map.to_list(pet))
   end
 
   @doc """
@@ -109,13 +107,12 @@ defmodule Anubis.Pet do
   def update_death_date_for_pet(pet, death_date) do
     death_date = Date.from_iso8601!(death_date)
 
-    age_time_in_months = Timex.diff(death_date, pet.obtained_date, :months)
+    age_time = Timex.diff(death_date, pet.adoption_date, :weeks)
 
     pet
     |> Map.replace!(:death_date, death_date)
+    |> Map.put(:age_time, age_time)
     |> Map.replace!(:alive_status, :death)
-    |> Map.replace!(:age_time_in_months, age_time_in_months)
-
 
   end
 

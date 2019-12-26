@@ -4,12 +4,13 @@ defmodule Anubis.PetTest do
   alias Anubis.Pet, as: Pet
 
   @basic_pet %{
-    name: "Dick",
+    name: "Tony",
     adoption_age: :puppy,
-    obtained_date: "2005-08-24",
+    adoption_date: "2019-07-16",
+    birth_date: "2019-06-16",
     pet_type: :canine,
-    size: :small,
-    race: "French Mini",
+    race_size: :small,
+    race: "Chihuahua",
     gender: :male,
     adoption_type: :given
   }
@@ -17,9 +18,9 @@ defmodule Anubis.PetTest do
   @adult_pet %{
     name: "Duquesa",
     adoption_age: :adult,
-    obtained_date: "2010-04-25",
+    adoption_date: "2010-04-25",
     pet_type: :canine,
-    size: :large,
+    race_size: :large,
     race: "Labrador",
     gender: :female,
     adoption_type: :street
@@ -34,45 +35,53 @@ defmodule Anubis.PetTest do
   end
 
   test "Marks a pet as death" do
-    basic_pet = Pet.create_pet @basic_pet
-  
+    basic_pet = %{
+      name: "Dick",
+      adoption_age: :puppy,
+      adoption_date: "2005-08-24",
+      adoption_date: "2005-08-24",
+      pet_type: :canine,
+      race_size: :small,
+      race: "French Mini",
+      gender: :male,
+      adoption_type: :given,
+      birth_date: ~D[2005-07-24]
+    }
+
+    basic_pet = Pet.create_pet basic_pet
+
     basic_pet = Pet.update_death_date_for_pet(basic_pet, "2018-09-03")
 
     assert basic_pet.alive_status == :death
-  end
-
-
-  test "Calculates age time for adult pet" do
-    adult_pet = Pet.create_pet @adult_pet
-
-    assert adult_pet.age_status == :adult
-    assert adult_pet.age_time_in_months == "Must be calculated for a vet"
   end
 
   test "Accepts Date type on params" do
     basic_pet = %{
       name: "Dick",
       adoption_age: :puppy,
-      obtained_date: ~D[2005-08-24],
+      adoption_date: "2005-08-24",
+      adoption_date: "2005-08-24",
       pet_type: :canine,
-      size: :small,
+      race_size: :small,
       race: "French Mini",
       gender: :male,
-      adoption_type: :given
+      adoption_type: :given,
+      birth_date: ~D[2005-07-24]
     }
 
     pet = Pet.create_pet basic_pet
 
-    assert pet.obtained_date == ~D[2005-08-24]
+    assert pet.adoption_date == ~D[2005-08-24]
   end
   
   test "Calculates age status for a large pet" do
     basic_pet = %{
       name: "Dick",
       adoption_age: :puppy,
-      obtained_date: ~D[2005-08-24],
+      adoption_date: ~D[2005-08-24],
+      birth_date: "2005-06-16",
       pet_type: :canine,
-      size: :large,
+      race_size: :large,
       race: "French Mini",
       gender: :male,
       adoption_type: :given
