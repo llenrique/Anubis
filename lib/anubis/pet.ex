@@ -33,6 +33,7 @@ defmodule Anubis.Pet do
 
   @adult_for_big_dogs 104
   @adult_for_small_dogs 78
+  @weeks_to_put_in_adoption 12
             
 
   @doc """
@@ -48,13 +49,19 @@ defmodule Anubis.Pet do
 
   # Converts a string to Date
   @spec _cast_date_fields(map) :: map
-  defp _cast_date_fields(%{adoption_date: adoption_date} = pet) when is_binary (adoption_date) do
+  defp _cast_date_fields(
+    %{
+      adoption_date: adoption_date
+    } = pet) when is_binary (adoption_date) do
     pet
     |> Map.update!(:adoption_date, &Date.from_iso8601!(&1))
     |> _cast_date_fields()
   end
 
-  defp _cast_date_fields(%{birth_date: birth_date} = pet) when is_binary (birth_date) do
+  defp _cast_date_fields(
+    %{
+      birth_date: birth_date
+    } = pet) when is_binary (birth_date) do
     pet
     |> Map.update!(:birth_date, &Date.from_iso8601!(&1))
     |> _cast_date_fields()
@@ -65,7 +72,18 @@ defmodule Anubis.Pet do
 
   # Calculates the age_in_weeks sice birth_date when adoption_age is :puppy
   @spec _calculate_age_weeks_for_pet(map) :: map
-  defp _calculate_age_weeks_for_pet(%{adoption_age: :puppy} = pet) do
+  defp _calculate_age_weeks_for_pet(
+    %{
+      birth_date: nil
+    } = pet) do
+    "Age must be calculated fot a vet"
+  end
+  
+  defp _calculate_age_weeks_for_pet(
+    %{
+      birth_date: _,
+      adoption_age: :puppy
+    } = pet) do
     Timex.diff(Date.utc_today(), pet.birth_date, :weeks)
   end
 
@@ -147,7 +165,7 @@ defmodule Anubis.Pet do
 
   defp _check_for_set_in_adoption_availability(pet) do
     case _calculate_age_weeks_for_pet(pet) do
-      weeks when weeks > 12 -> 
+      weeks when weeks > @weeks_to_put_in_adoption -> 
         {:ok, "This pet can be put in adoption"}
       _ -> 
         {:error, "Puppies can be put in adoption 12 weeks afer born"}
