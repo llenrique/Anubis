@@ -39,7 +39,6 @@ defmodule Anubis.PetTest do
       name: "Dick",
       adoption_age: :puppy,
       adoption_date: "2005-08-24",
-      adoption_date: "2005-08-24",
       pet_type: :canine,
       race_size: :small,
       race: "French Mini",
@@ -59,8 +58,7 @@ defmodule Anubis.PetTest do
     basic_pet = %{
       name: "Dick",
       adoption_age: :puppy,
-      adoption_date: "2005-08-24",
-      adoption_date: "2005-08-24",
+      adoption_date: ~D[2005-08-24],
       pet_type: :canine,
       race_size: :small,
       race: "French Mini",

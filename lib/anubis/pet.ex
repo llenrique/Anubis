@@ -71,12 +71,12 @@ defmodule Anubis.Pet do
   # Case when date fields are actually a Date type
   defp _cast_date_fields(pet), do: pet
 
-  # Calculates the age_in_weeks sice birth_date when adoption_age is :puppy
+  # Calculates the age_in_weeks since birth_date when adoption_age is :puppy
   @spec _calculate_age_weeks_for_pet(map) :: map
   defp _calculate_age_weeks_for_pet(
     %{
       birth_date: nil
-    } = pet) do
+    }) do
     "Age must be calculated fot a vet"
   end
   
@@ -154,7 +154,7 @@ defmodule Anubis.Pet do
   """
   @spec update_adoption_status_for_pet(Pet, atom) :: Pet | map
   def update_adoption_status_for_pet(
-    %{
+    %Pet{} = %{
       adoption_age: :puppy
     } = pet, 
     adoption_status) do
@@ -177,6 +177,8 @@ defmodule Anubis.Pet do
     Map.replace!(pet, :adoption_status, adoption_status)
   end
 
+  # Indicates if the pet can be set in adoption and the reason
+  @spec  _check_for_set_in_adoption_availability(map) :: {boolean, String.t()}
   defp _check_for_set_in_adoption_availability(pet) do
     case _calculate_age_weeks_for_pet(pet) do
       weeks when weeks > @weeks_to_put_in_adoption -> 
