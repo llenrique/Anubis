@@ -1,17 +1,18 @@
 defmodule Anubis.Pet do
   @moduledoc """
-  Documentation for Anubis.
+  Abubis is the library for managing pets information. The intention of this
+  module is to create a pet with the information given y the owner like name,
+  adoption_age, adoption_date and if it's possible, the birth_date.
+
+  This module actually can create a basic structure for a pet, calculate the age in weeks for the pet since the bith_date, determinate if the pet si an
+  adult or a puppy, and in the worst case you can set your pet as death passing 
+  the death_date to the update_death_date_for_pet.
+
+  This module can actually determinate if a puppy can be set in adoption if the
+  weeks sicne birth_date is greater than 12. Otherwise the puppy cannot be set
+  in adoption. For adult pets not age validation is required.
   """
 
-  @doc """
-  Hello world.
-
-  ## Examples
-
-      iex> Anubis.hello()
-      :world
-
-  """
   alias __MODULE__
 
   defstruct name: nil, 
@@ -104,8 +105,10 @@ defmodule Anubis.Pet do
     } = pet) when race_size == :small or race_size == :medium do
 
     case _calculate_age_weeks_for_pet(pet) do
-      weeks when weeks >= @adult_for_small_dogs -> Map.put(pet, :age_status, :adult)
-      _ -> Map.put(pet, :age_status, :puppy)
+      weeks when weeks >= @adult_for_small_dogs -> 
+        Map.put(pet, :age_status, :adult)
+      _ -> 
+        Map.put(pet, :age_status, :puppy)
     end
   end
 
@@ -116,12 +119,14 @@ defmodule Anubis.Pet do
     } = pet) when race_size == :large or race_size == :giant do
 
     case _calculate_age_weeks_for_pet(pet) do
-      weeks when weeks >= @adult_for_big_dogs -> Map.put(pet, :age_status, :adult)
-      _ -> Map.put(pet, :age_status, :puppy)
+      weeks when weeks >= @adult_for_big_dogs -> 
+        Map.put(pet, :age_status, :adult)
+      _ -> 
+        Map.put(pet, :age_status, :puppy)
     end
   end
 
-  # Builds a struct when the given params
+  # Builds a struct whith the given params
   @spec _cast_params_to_struct(map) :: Pet
   defp _cast_params_to_struct(pet) do
     struct(__MODULE__, Map.to_list(pet))
@@ -147,7 +152,7 @@ defmodule Anubis.Pet do
   If a person wants to give in adoption a pet, this function will update
   the adoption status
   """
-  @spec update_adoption_status_for_pet(Pet, atom) :: Pet
+  @spec update_adoption_status_for_pet(Pet, atom) :: Pet | map
   def update_adoption_status_for_pet(
     %{
       adoption_age: :puppy
@@ -159,8 +164,17 @@ defmodule Anubis.Pet do
     else
       {:error, reason} ->
         IO.inspect(reason, label: "Error")
-        pet
+        {:error, reason}
     end
+  end
+  
+  def update_adoption_status_for_pet(
+    %{
+      adoption_age: :adult
+    } = pet, 
+    adoption_status) do
+    
+    Map.replace!(pet, :adoption_status, adoption_status)
   end
 
   defp _check_for_set_in_adoption_availability(pet) do
