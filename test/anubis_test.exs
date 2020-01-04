@@ -4,43 +4,43 @@ defmodule Anubis.PetTest do
   alias Anubis.Pet, as: Pet
 
   @basic_big_puppy_pet %{
-    name: "Rambo",
-    species: :canine,
-    race: "Golden Chocolate",
-    gender: :male,
-    color: :brown,
-    race_size: :large,
-    birth_date: Timex.shift(Date.utc_today(), weeks: -1)
+    "name" => "Rambo",
+    "species" => :canine,
+    "race" => "Golden Chocolate",
+    "gender" => :male,
+    "color" => :brown,
+    "race_size" => :large,
+    "birth_date" => Timex.shift(Date.utc_today(), weeks: -1)
   }
 
   @basic_big_adult_pet %{
-    name: "Rambo",
-    species: :canine,
-    race: "Golden Chocolate",
-    gender: :male,
-    color: :brown,
-    race_size: :large,
-    birth_date: Timex.shift(Date.utc_today(), weeks: -104)
+    "birth_date" => "2015-05-17",
+    "color" => "white/brown",
+    "gender" => "male",
+    "name" => "Hulk",
+    "race" => "PitBull",
+    "race_size" => "large",
+    "species" => "canine"
   }
 
   @basic_small_puppy_pet %{
-    name: "Rambo",
-    species: :canine,
-    race: "Golden Chocolate",
-    gender: :male,
-    color: :brown,
-    race_size: :small,
-    birth_date: Timex.shift(Date.utc_today(), weeks: -1)
+    "name" => "Rambo",
+    "species" => :canine,
+    "race" => "Golden Chocolate",
+    "gender" => :male,
+    "color" => :brown,
+    "race_size" => :small,
+    "birth_date" => Timex.shift(Date.utc_today(), weeks: -1)
   }
 
   @basic_small_adult_pet %{
-    name: "Rambo",
-    species: :canine,
-    race: "Golden Chocolate",
-    gender: :male,
-    color: :brown,
-    race_size: :small,
-    birth_date: Timex.shift(Date.utc_today(), weeks: -78)
+    "name" => "Rambo",
+    "species" => :canine,
+    "race" => "Golden Chocolate",
+    "gender" => :male,
+    "color" => :brown,
+    "race_size" => :small,
+    "birth_date" => Timex.shift(Date.utc_today(), weeks: -78)
   }
 
   test "create_pet/1 Can create a pet with basic data" do
@@ -73,11 +73,11 @@ defmodule Anubis.PetTest do
     created_pet = Pet.create_pet @basic_big_adult_pet
 
     assert %Anubis.Pet{} = created_pet
-    assert created_pet.species == :canine
-    assert created_pet.name == "Rambo"
-    assert created_pet.gender == :male
-    assert created_pet.race == "Golden Chocolate"
-    assert created_pet.age_on_weeks == 104
+    assert created_pet.species == "canine"
+    assert created_pet.name == "Hulk"
+    assert created_pet.gender == "male"
+    assert created_pet.race == "PitBull"
+    assert created_pet.age_on_weeks == 241
     assert created_pet.age_status == :adult
 
   end
@@ -97,13 +97,13 @@ defmodule Anubis.PetTest do
 
   test "update_adoption_status/1 Can set in adoption a pet" do
     pet_map = %{
-      name: "Mila",
-      species: :canine,
-      race: "Schnauser",
-      gender: :female,
-      color: :grey,
-      race_size: :small,
-      birth_date: Timex.shift(Date.utc_today(), weeks: -12)
+      "name" => "Mila",
+      "species" => :canine,
+      "race" => "Schnauser",
+      "gender" => :female,
+      "color" => :grey,
+      "race_size" => "small",
+      "birth_date" => Timex.shift(Date.utc_today(), weeks: -12)
     }
 
     created_pet =
@@ -116,13 +116,13 @@ defmodule Anubis.PetTest do
 
   test "update_adoption_status/1 Can't set in adoption a pet" do
     pet_map = %{
-      name: "Mila",
-      species: :canine,
-      race: "Schnauser",
-      gender: :female,
-      color: :grey,
-      race_size: :small,
-      birth_date: Timex.shift(Date.utc_today(), weeks: -10)
+      "name" => "Mila",
+      "species" => :canine,
+      "race" => "Schnauser",
+      "gender" => :female,
+      "color" => :grey,
+      "race_size" => "small",
+      "birth_date" => Timex.shift(Date.utc_today(), weeks: -10)
     }
 
     created_pet =
@@ -179,7 +179,7 @@ defmodule Anubis.PetTest do
     assert pet.general_status == :lost
   end
 
-  test "mark a pet as dead in general_status" do
+  test "mark a pet as death in general_status" do
     pet = %Anubis.Pet{
       adoption_date: ~D[2009-12-31],
       adoption_status: :in_adoption,
@@ -197,9 +197,9 @@ defmodule Anubis.PetTest do
       death_date: nil
     }
 
-    pet = Pet.update_general_status(pet, :death)
+    pet = Pet.mask_pet_as_death(pet, "2018-09-03")
 
     assert pet.general_status == :death
-    assert pet.death_date == Date.utc_today()
+    assert pet.death_date == ~D[2018-09-03]
   end
 end

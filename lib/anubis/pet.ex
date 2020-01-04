@@ -36,11 +36,18 @@ defmodule Anubis.Pet do
   @spec create_pet(map) :: Pet
   def create_pet(params) do
     params
+    |> _prepare_params()
     |> _cast_string_to_date()
     |> get_age_on_weeks()
     |> calculate_age_status()
     |> _generate_pet_uuid()
     |> _cast_to_module_struct()
+  end
+
+  defp _prepare_params(map) do
+    for {key, val} <- map, into: %{} do
+      {String.to_atom(key), val}
+    end
   end
 
   # Cast a string date in a map to a Date type
@@ -77,6 +84,12 @@ defmodule Anubis.Pet do
   Using the age on weeks determiates if the pet is an adult or a puppy
   """
   @spec calculate_age_status(map) :: map
+  def calculate_age_status(%{race_size: size} = params) when is_binary(size) do
+    params
+    |> Map.update!(:race_size, &String.to_atom(&1))
+    |> calculate_age_status()
+  end
+
   def calculate_age_status(
     %{
       race_size: size
@@ -152,29 +165,45 @@ defmodule Anubis.Pet do
   if the status is :death, updates the :death_date
   """
   @spec update_general_status(Pet, atom) :: Pet | {:error, String.t()}
-  def update_general_status(pet, :death) do
-    with \
-      {:ok, _} <- Map.fetch(pet, :death_date),
-      {:ok, _} <- Map.fetch(pet, :general_status)
-    do
-      pet
-      |> Map.put(:death_date, Date.utc_today())
-      |> Map.put(:general_status, :death)
-    else
+  def update_general_status(pet, status) do
+    case Map.fetch(pet, :general_status) do
+      {:ok, _} ->
+        Map.put(pet, :general_status, status)
       :error ->
-        {:error, "Error"}
+        {:error, "Cannot update general status"}
     end
   end
-  
-  def update_general_status(pet, general_status) do
+
+  @doc """
+  Update a pet as death and the relevant information for this
+  """
+  @spec mask_pet_as_death(Pet, String.t()) :: Pet | {:error, String.t()}
+  def mask_pet_as_death(pet, death_date) do
+    death_date = _cast_to_date(death_date)
+    alive_weeks = _get_alive_weeks(pet, death_date)
+
     with \
-      {:ok, _} <- Map.fetch(pet, :general_status)
+      pet <- update_general_status(pet, :death),
+      {:ok, _} <- Map.fetch(pet, :age_on_weeks),
+      {:ok, nil} <- Map.fetch(pet, :death_date)
     do
-      Map.put(pet, :general_status, general_status)
+      pet
+      |> Map.put(:age_on_weeks, alive_weeks)
+      |> Map.put(:death_date, death_date)
     else
-      :error ->
-        {:error, "Error"}
+      :error -> {:error, "Error"}
+      {:error, error} -> {:error, error}
     end
+  end
+
+  defp _cast_to_date(date_string) when is_binary(date_string) do
+    Date.from_iso8601!(date_string)
+  end
+
+  defp _cast_to_date(date_string), do: date_string
+
+  defp _get_alive_weeks(pet, death_date) do
+    Timex.diff(pet.birth_date, death_date)
   end
 
   # Using the age on weeks since birth_date determinates of the pet can be
