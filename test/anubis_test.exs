@@ -46,7 +46,6 @@ defmodule Anubis.PetTest do
   test "create_pet/1 Can create a pet with basic data" do
     created_pet = Pet.create_pet @basic_big_puppy_pet
 
-
     assert %Anubis.Pet{} = created_pet
     assert created_pet.species == :canine
     assert created_pet.name == "Rambo"
@@ -95,7 +94,7 @@ defmodule Anubis.PetTest do
     assert created_pet.age_status == :puppy
 
   end
-  
+
   test "update_adoption_status/1 Can set in adoption a pet" do
     pet_map = %{
       name: "Mila",
@@ -107,10 +106,10 @@ defmodule Anubis.PetTest do
       birth_date: Timex.shift(Date.utc_today(), weeks: -12)
     }
 
-    created_pet = 
-    pet_map
-    |> Anubis.Pet.create_pet()
-    |> Anubis.Pet.update_adoption_status(:in_adoption)
+    created_pet =
+      pet_map
+      |> Anubis.Pet.create_pet()
+      |> Anubis.Pet.update_adoption_status(:in_adoption)
 
     assert created_pet.adoption_status == :in_adoption
   end
@@ -126,12 +125,81 @@ defmodule Anubis.PetTest do
       birth_date: Timex.shift(Date.utc_today(), weeks: -10)
     }
 
-    created_pet = 
-    pet_map
-    |> Anubis.Pet.create_pet()
-    |> Anubis.Pet.update_adoption_status(:in_adoption)
+    created_pet =
+      pet_map
+      |> Anubis.Pet.create_pet()
+      |> Anubis.Pet.update_adoption_status(:in_adoption)
 
     assert {:error, reason} = created_pet
     assert reason == "Puppies can be set in adoption 12 weeks after born"
+  end
+
+  test "update_adoption_status/1 Set a pet as :adopted when pet is :in_adoption" do
+    in_adoption_pet = %Anubis.Pet{
+      adoption_date: ~D[2009-12-31],
+      adoption_status: :in_adoption,
+      age_on_weeks: 316,
+      age_status: :adult,
+      birth_date: ~D[2009-01-01],
+      color: :golden,
+      gender: :female,
+      name: "Duquesa",
+      particular_signs: nil,
+      race: "Labrador",
+      race_size: :large,
+      species: :canine
+    }
+
+    adopted_pet = Pet.update_adoption_status(in_adoption_pet, :adopted)
+
+    assert in_adoption_pet.adoption_status != adopted_pet.adoption_status
+    assert adopted_pet.adoption_status == :adopted
+    assert adopted_pet.adoption_date == Date.utc_today()
+  end
+
+  test "update general_status" do
+    pet = %Anubis.Pet{
+      adoption_date: ~D[2009-12-31],
+      adoption_status: :in_adoption,
+      age_on_weeks: 316,
+      age_status: :adult,
+      birth_date: ~D[2009-01-01],
+      color: :golden,
+      gender: :female,
+      name: "Duquesa",
+      particular_signs: nil,
+      race: "Labrador",
+      race_size: :large,
+      species: :canine,
+      general_status: :ok,
+    }
+
+    pet = Pet.update_general_status(pet, :lost)
+
+    assert pet.general_status == :lost
+  end
+
+  test "mark a pet as dead in general_status" do
+    pet = %Anubis.Pet{
+      adoption_date: ~D[2009-12-31],
+      adoption_status: :in_adoption,
+      age_on_weeks: 316,
+      age_status: :adult,
+      birth_date: ~D[2009-01-01],
+      color: :golden,
+      gender: :female,
+      name: "Duquesa",
+      particular_signs: nil,
+      race: "Labrador",
+      race_size: :large,
+      species: :canine,
+      general_status: :alive,
+      death_date: nil
+    }
+
+    pet = Pet.update_general_status(pet, :death)
+
+    assert pet.general_status == :death
+    assert pet.death_date == Date.utc_today()
   end
 end

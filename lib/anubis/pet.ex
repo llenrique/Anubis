@@ -1,6 +1,7 @@
 defmodule Anubis.Pet do
-  
-  defstruct name: nil,
+
+  defstruct uuid: nil,
+            name: nil,
             species: nil,
             race: nil,
             gender: nil,
@@ -10,20 +11,22 @@ defmodule Anubis.Pet do
             particular_signs: nil,
             age_on_weeks: 0,
             age_status: nil,
+            death_date: nil,
+            general_status: :alive,
             adoption_status: false,
             adoption_date: Date.utc_today()
-  
+
   @adult_for_small_dogs 78
   @adult_for_big_dogs 104
   @weeks_for_adoption 12
-  
+
   alias __MODULE__
 
   @doc """
   Creates a pet with the basic information:
     > name
     > race
-    > race
+    > species
     > gender
     > color
     > birth_date
@@ -36,6 +39,7 @@ defmodule Anubis.Pet do
     |> _cast_string_to_date()
     |> get_age_on_weeks()
     |> calculate_age_status()
+    |> _generate_pet_uuid()
     |> _cast_to_module_struct()
   end
 
@@ -56,7 +60,7 @@ defmodule Anubis.Pet do
   @doc """
   Calculates the pet age on weeks
   """
-  @spec get_age_on_weeks(map) :: map 
+  @spec get_age_on_weeks(map) :: map
   def get_age_on_weeks(%{birth_date: birth_date} = params) do
     age_on_weeks = _get_weeks_since_birth_date(birth_date)
     Map.put(params, :age_on_weeks, age_on_weeks)
@@ -97,6 +101,11 @@ defmodule Anubis.Pet do
     end
   end
 
+  defp _generate_pet_uuid(pet) do
+    pet_uuid =  UUID.uuid4(:default)
+    Map.put(pet, :uuid, pet_uuid)
+  end
+
   # Merge the map into the defined struct
   @spec _cast_to_module_struct(map) :: struct
   defp _cast_to_module_struct(params) do
@@ -107,6 +116,23 @@ defmodule Anubis.Pet do
   Set a pet in adoption or rejects the request
   """
   @spec update_adoption_status(Pet, atom) :: Pet | {:error, String.t()}
+  def update_adoption_status(
+    %{
+      adoption_status: :in_adoption
+    } = pet,
+    :adopted) do
+    with \
+      {:ok, _} <- Map.fetch(pet, :adoption_date),
+      {:ok, _} <- Map.fetch(pet, :adoption_status)
+    do
+      pet
+      |> Map.put(:adoption_date, Date.utc_today())
+      |> Map.put(:adoption_status, :adopted)
+    else
+      :error -> {:error, "Error"}
+    end
+  end
+
   def update_adoption_status(pet, adoption_status) do
     with \
       :ok <- _can_be_set_in_adoption?(pet),
@@ -116,6 +142,38 @@ defmodule Anubis.Pet do
     else
       {:error, reason} ->
         {:error, reason}
+    end
+  end
+
+  @doc """
+  update de general_status, it could be :ok, :lost, :death or not corresponding
+  status with the adopted_status
+
+  if the status is :death, updates the :death_date
+  """
+  @spec update_general_status(Pet, atom) :: Pet | {:error, String.t()}
+  def update_general_status(pet, :death) do
+    with \
+      {:ok, _} <- Map.fetch(pet, :death_date),
+      {:ok, _} <- Map.fetch(pet, :general_status)
+    do
+      pet
+      |> Map.put(:death_date, Date.utc_today())
+      |> Map.put(:general_status, :death)
+    else
+      :error ->
+        {:error, "Error"}
+    end
+  end
+  
+  def update_general_status(pet, general_status) do
+    with \
+      {:ok, _} <- Map.fetch(pet, :general_status)
+    do
+      Map.put(pet, :general_status, general_status)
+    else
+      :error ->
+        {:error, "Error"}
     end
   end
 
