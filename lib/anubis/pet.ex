@@ -14,7 +14,7 @@ defmodule Anubis.Pet do
             death_date: nil,
             general_status: :alive,
             adoption_status: false,
-            adoption_date: Date.utc_today()
+            adoption_date: nil
 
   @adult_for_small_dogs 78
   @adult_for_big_dogs 104
@@ -50,18 +50,23 @@ defmodule Anubis.Pet do
     |> _cast_to_module_struct()
   end
 
+  # Preparates params with the expected format
   defp _prepare_params(map) do
     map 
     |> _cast_keys_to_atoms()
     |> _cast_strings_to_atoms()
   end
 
+  # Converts map key in strings to atoms
+  @spec _cast_keys_to_atoms(map) :: map
   defp _cast_keys_to_atoms(map) do
     for {key, val} <- map, into: %{} do
       {String.to_atom(key), val}
     end
   end
 
+  # Converts string values to atoms depe key
+  @spec  _cast_strings_to_atoms(map) :: map
   defp _cast_strings_to_atoms(map) do
     Enum.reduce(@atom_values, map, fn item, map -> 
       if Map.get(map, item) do
@@ -149,7 +154,7 @@ defmodule Anubis.Pet do
   @doc """
   Set a pet in adoption or rejects the request
   """
-  @spec update_adoption_status(Pet, atom) :: Pet | {:error, String.t()}
+   @spec update_adoption_status(Pet, atom) :: Pet | {:error, String.t()}
   def update_adoption_status(
     %{
       adoption_status: :in_adoption
