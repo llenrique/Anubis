@@ -5,11 +5,11 @@ defmodule Anubis.PetTest do
 
   @basic_big_puppy_pet %{
     "name" => "Rambo",
-    "species" => :canine,
+    "species" => "canine",
     "race" => "Golden Chocolate",
-    "gender" => :male,
-    "color" => :brown,
-    "race_size" => :large,
+    "gender" => "male",
+    "color" => "brown",
+    "race_size" => "large",
     "birth_date" => Timex.shift(Date.utc_today(), weeks: -1)
   }
 
@@ -25,21 +25,21 @@ defmodule Anubis.PetTest do
 
   @basic_small_puppy_pet %{
     "name" => "Rambo",
-    "species" => :canine,
+    "species" => "canine",
     "race" => "Golden Chocolate",
-    "gender" => :male,
-    "color" => :brown,
-    "race_size" => :small,
+    "gender" => "male",
+    "color" => "brown",
+    "race_size" => "small",
     "birth_date" => Timex.shift(Date.utc_today(), weeks: -1)
   }
 
   @basic_small_adult_pet %{
     "name" => "Rambo",
-    "species" => :canine,
+    "species" => "canine",
     "race" => "Golden Chocolate",
-    "gender" => :male,
-    "color" => :brown,
-    "race_size" => :small,
+    "gender" => "male",
+    "color" => "brown",
+    "race_size" => "small",
     "birth_date" => Timex.shift(Date.utc_today(), weeks: -78)
   }
 
@@ -73,11 +73,11 @@ defmodule Anubis.PetTest do
     created_pet = Pet.create_pet @basic_big_adult_pet
 
     assert %Anubis.Pet{} = created_pet
-    assert created_pet.species == "canine"
+    assert created_pet.species == :canine
     assert created_pet.name == "Hulk"
-    assert created_pet.gender == "male"
+    assert created_pet.gender == :male
     assert created_pet.race == "PitBull"
-    assert created_pet.age_on_weeks == 241
+    assert created_pet.age_on_weeks == 242
     assert created_pet.age_status == :adult
 
   end
@@ -98,10 +98,10 @@ defmodule Anubis.PetTest do
   test "update_adoption_status/1 Can set in adoption a pet" do
     pet_map = %{
       "name" => "Mila",
-      "species" => :canine,
+      "species" => "canine",
       "race" => "Schnauser",
-      "gender" => :female,
-      "color" => :grey,
+      "gender" => "female",
+      "color" => "grey",
       "race_size" => "small",
       "birth_date" => Timex.shift(Date.utc_today(), weeks: -12)
     }
@@ -117,10 +117,10 @@ defmodule Anubis.PetTest do
   test "update_adoption_status/1 Can't set in adoption a pet" do
     pet_map = %{
       "name" => "Mila",
-      "species" => :canine,
+      "species" => "canine",
       "race" => "Schnauser",
-      "gender" => :female,
-      "color" => :grey,
+      "gender" => "female",
+      "color" => "grey",
       "race_size" => "small",
       "birth_date" => Timex.shift(Date.utc_today(), weeks: -10)
     }

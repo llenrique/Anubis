@@ -20,6 +20,12 @@ defmodule Anubis.Pet do
   @adult_for_big_dogs 104
   @weeks_for_adoption 12
 
+  @atom_values [
+    :gender,
+    :race_size,
+    :species
+  ]
+
   alias __MODULE__
 
   @doc """
@@ -45,10 +51,25 @@ defmodule Anubis.Pet do
   end
 
   defp _prepare_params(map) do
+    map 
+    |> _cast_keys_to_atoms()
+    |> _cast_strings_to_atoms()
+  end
+
+  defp _cast_keys_to_atoms(map) do
     for {key, val} <- map, into: %{} do
       {String.to_atom(key), val}
     end
   end
+
+  defp _cast_strings_to_atoms(map) do
+    Enum.reduce(@atom_values, map, fn item, map -> 
+      if Map.get(map, item) do
+        Map.put(map, item, String.to_atom(map[item]))
+      end
+    end)
+  end
+
 
   # Cast a string date in a map to a Date type
   @spec _cast_string_to_date(map) :: map
