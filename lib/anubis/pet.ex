@@ -75,7 +75,6 @@ defmodule Anubis.Pet do
     end)
   end
 
-
   # Cast a string date in a map to a Date type
   @spec _cast_string_to_date(map) :: map
   defp _cast_string_to_date(
